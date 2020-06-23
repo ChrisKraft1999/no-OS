@@ -93,6 +93,23 @@ static ssize_t iio_server_read(char *buf, size_t len)
 int32_t iio_server_init(struct iio_axi_adc_init_param *adc_init,
 			struct iio_axi_dac_init_param *dac_init)
 {
+	int32_t status;
+
+#ifndef PLATFORM_MB
+	struct xil_irq_init_param xil_irq_init_param = {
+		.type = IRQ_PS,
+	};
+
+	struct irq_init_param irq_init_param = {
+		.irq_ctrl_id = INTC_DEVICE_ID,
+		.extra = &xil_irq_init_param,
+	};
+
+	status = irq_ctrl_init(&irq_desc, &irq_init_param);
+	if (IS_ERR_VALUE(status))
+		return FAILURE;
+#endif
+
 	struct xil_uart_init_param xil_uart_init_par = {
 #ifdef PLATFORM_MB
 		.type = UART_PL,
@@ -117,22 +134,6 @@ int32_t iio_server_init(struct iio_axi_adc_init_param *adc_init,
 	struct iio_app_desc *iio_app_desc;
 	struct iio_axi_adc_desc *iio_axi_adc_desc;
 	struct iio_axi_dac_desc *iio_axi_dac_desc;
-	int32_t status;
-
-#ifndef PLATFORM_MB
-	struct xil_irq_init_param xil_irq_init_param = {
-		.type = IRQ_PS,
-	};
-
-	struct irq_init_param irq_init_param = {
-		.irq_ctrl_id = INTC_DEVICE_ID,
-		.extra = &xil_irq_init_param,
-	};
-
-	status = irq_ctrl_init(&irq_desc, &irq_init_param);
-	if (IS_ERR_VALUE(status))
-		return FAILURE;
-#endif
 
 	status = uart_init(&uart_desc, &uart_init_par);
 	if (IS_ERR_VALUE(status))
